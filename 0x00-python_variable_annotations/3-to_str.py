@@ -3,4 +3,5 @@
 
 
 def to_str(n: float) -> str:
+    """a type annotated function"""
     return str(n)
