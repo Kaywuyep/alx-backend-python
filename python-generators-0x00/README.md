@@ -24,6 +24,11 @@ This project provides scripts to create and populate a MySQL database using Pyth
 
 ---
 
+create a table in mysql cli to be populated with the ,csv file 
+```sql
+CREATE DATABASE ALX_prodev;
+```
+
 ## Setup
 
 1. Clone the repository:
