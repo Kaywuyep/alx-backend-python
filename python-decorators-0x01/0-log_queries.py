@@ -1,36 +1,21 @@
 import sqlite3
 import functools
 
+from datetime import datetime
 
-# decorator to log SQL queries
 
+# Decorator to log SQL queries
 def log_queries(func):
     """
     Decorator that logs SQL queries before executing them.
-    Assumes the first argument of the decorated function is a
-    'query' parameter.
+    Assumes the first argument of the decorated function
+    is a 'query' parameter.
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Extract query from arguments
-        query = None
-
-        # Check if query is passed as keyword argument
-        if 'query' in kwargs:
-            query = kwargs['query']
-        # Check if query is the first positional argument
-        elif args and len(args) > 0:
-            query = args[0]
-
-        # Log the query if found
-        if query:
-            print(f"Executing SQL Query: {query}")
-        else:
-            print("No query found to log")
-
-        # Execute the original function
+        query = kwargs.get('query') or (args[0] if args else '')
+        print(f"[{datetime.now()}] Executing SQL query: {query}")
         return func(*args, **kwargs)
-
     return wrapper
 
 
