@@ -1,9 +1,10 @@
 # from django.shortcuts import render
 # Create your views here.
 # pylint: disable=no-member
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
 from .serializers import UserSerializer
@@ -16,6 +17,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['created_at']
+    search_fields = ['users__username']
 
     def get_queryset(self):
         # Only show conversations the current user participates in
@@ -52,6 +56,9 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['conversation', 'sent_at']
+    search_fields = ['message_body', 'sender__username']
 
     def get_queryset(self):
         # Optionally filter by conversation ID
@@ -63,14 +70,14 @@ class MessageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Send a new message in an existing conversation.
-        Expects 'conversation_id' and 'content' in request data.
+        Expects 'conversation_id' and 'message_body' in request data.
         """
         conversation_id = request.data.get('conversation_id')
-        content = request.data.get('content')
+        message_body = request.data.get('message_body')
 
-        if not conversation_id or not content:
+        if not conversation_id or not message_body:
             return Response(
-                {'error': 'conversation_id and content fields are required.'},
+                {'error': 'conversation_id and message_body fields are required.'},
                 status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -85,7 +92,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         message = Message.objects.create(
             sender=request.user,
             conversation=conversation,
-            content=content
+            message_body=message_body
         )
 
         serializer = self.get_serializer(message)
