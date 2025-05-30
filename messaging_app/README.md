@@ -34,6 +34,8 @@ source venv/bin/activate
 python manage.py makemigrations
 python manage.py migrate
 
+pip install -r requirements.txt
+
 # Create a superuser (optional):
 python manage.py createsuperuser
 
