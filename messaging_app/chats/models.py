@@ -22,6 +22,7 @@ class User(AbstractUser):
     - is_online: Boolean status to indicate if user is currently online.
     - last_seen: Timestamp of the user's last activity.
     """
+    # Django automatically creates a primary_key field (id) for models
     user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
