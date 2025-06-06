@@ -27,6 +27,8 @@ class IsParticipantOfConversation(permissions.BasePermission):
                 except (ObjectDoesNotExist, ValueError):
                     return False
 
+        # For other methods (GET, PUT, PATCH, DELETE),
+        # object-level permission is checked
         return True
 
     def has_object_permission(self, request, view, obj):
