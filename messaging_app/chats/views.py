@@ -8,6 +8,8 @@ from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer
 from .serializers import MessageSerializer
 from .permissions import IsParticipantOfConversation
+from .filters import MessageFilter
+from .pagination import MessagePagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -75,7 +77,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         
         if not user_id:
             return Response(
-                {'error': 'user_id is required'}, 
+                {'error': 'user_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -94,7 +96,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 )
         except User.DoesNotExist:
             return Response(
-                {'error': 'User not found'}, 
+                {'error': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -109,7 +111,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
         if not user_id:
             return Response(
-                {'error': 'user_id is required'}, 
+                {'error': 'user_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -128,7 +130,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 )
         except User.DoesNotExist:
             return Response(
-                {'error': 'User not found'}, 
+                {'error': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -141,6 +143,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    filterset_class = MessageFilter
+    pagination_class = MessagePagination
 
     def get_queryset(self):
         """
@@ -185,28 +189,27 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_conversation(self, request):
-        """
-        Get messages for a specific conversation.
-        """
         conversation_id = request.query_params.get('conversation_id')
         if not conversation_id:
             return Response(
                 {'error': 'conversation_id parameter is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                status=status.HTTP_400_BAD_REQUEST)
 
         try:
             conversation = Conversation.objects.get(id=conversation_id)
-            # Check if user is participant
             if request.user not in conversation.users.all():
                 return Response(
                     {'error': 'You are not a participant in this conversation'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+                    status=status.HTTP_403_FORBIDDEN)
 
             messages = Message.objects.filter(
                 conversation=conversation
             ).select_related('sender').order_by('sent_at')
+
+            page = self.paginate_queryset(messages)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
 
             serializer = self.get_serializer(messages, many=True)
             return Response(serializer.data)
@@ -214,17 +217,18 @@ class MessageViewSet(viewsets.ModelViewSet):
         except Conversation.DoesNotExist:
             return Response(
                 {'error': 'Conversation not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+                status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'])
     def my_messages(self, request):
-        """
-        Get all messages sent by the current user.
-        """
         messages = Message.objects.filter(
             sender=request.user
         ).select_related('conversation').order_by('-sent_at')
+
+        page = self.paginate_queryset(messages)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
