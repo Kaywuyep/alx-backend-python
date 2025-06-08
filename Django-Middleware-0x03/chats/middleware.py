@@ -1,10 +1,10 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils.deprecation import MiddlewareMixin
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from collections import defaultdict, deque
-from django.http import JsonResponse
+from django.contrib.auth.models import Group
 
 # Configure logging to write to a file
 logging.basicConfig(
@@ -127,3 +127,63 @@ class OffensiveLanguageMiddleware(MiddlewareMixin):
         oldest_request = self.ip_requests[ip_address][0]
         wait_time = self.TIME_WINDOW - (current_time - oldest_request)
         return max(0, int(wait_time))
+
+
+class RolePermissionMiddleware(MiddlewareMixin):
+    # Define protected paths that require admin/moderator access
+    PROTECTED_PATHS = [
+        '/admin/',
+        '/moderator/',
+    ]
+    
+    # Define allowed roles
+    ALLOWED_ROLES = ['admin', 'moderator']
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        super().__init__(get_response)
+    
+    def __call__(self, request):
+        # Check if the requested path requires special permissions
+        if self.requires_permission(request.path):
+            # Check if user is authenticated
+            if not request.user.is_authenticated:
+                return HttpResponseForbidden(
+                    "Authentication required. Please log in to access this resource."
+                )
+            
+            # Check if user has required role
+            if not self.has_required_role(request.user):
+                return HttpResponseForbidden(
+                    "Access denied. Admin or moderator privileges required to access this resource."
+                )
+        
+        # Process the request if permission checks pass
+        response = self.get_response(request)
+        return response
+    
+    def requires_permission(self, path):
+        """Check if the requested path requires admin/moderator permissions"""
+        return any(path.startswith(protected_path) for protected_path in self.PROTECTED_PATHS)
+    
+    def has_required_role(self, user):
+        """Check if user has admin or moderator role"""
+        # Check if user is superuser (Django's built-in admin)
+        if user.is_superuser:
+            return True
+        
+        # Check if user is staff (Django's built-in staff status)
+        if user.is_staff:
+            return True
+        
+        # Check user groups for admin/moderator roles
+        user_groups = user.groups.values_list('name', flat=True)
+        return any(role.lower() in [group.lower() for group in user_groups] for role in self.ALLOWED_ROLES)
+        
+        # Check custom user profile
+        # if hasattr(user, 'profile') and hasattr(user.profile, 'role'):
+        #     return user.profile.role.lower() in [role.lower() for role in self.ALLOWED_ROLES]
+        
+        # Check custom user fields
+        # if hasattr(user, 'role'):
+        #     return user.role.lower() in [role.lower() for role in self.ALLOWED_ROLES]
