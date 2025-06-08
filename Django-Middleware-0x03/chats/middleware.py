@@ -129,7 +129,7 @@ class OffensiveLanguageMiddleware(MiddlewareMixin):
         return max(0, int(wait_time))
 
 
-class RolePermissionMiddleware(MiddlewareMixin):
+class RolepermissionMiddleware(MiddlewareMixin):
     # Define protected paths that require admin/moderator access
     PROTECTED_PATHS = [
         '/admin/',
