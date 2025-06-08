@@ -1,6 +1,7 @@
-# Django Messaging App
+# Django Middleware
 
 A simple messaging API built with Django and Django REST Framework. It supports conversations between users, message sending, and user profiles.
+this project helps understand Middlewares in Django
 
 ---
 
