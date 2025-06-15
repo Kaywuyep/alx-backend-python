@@ -74,6 +74,14 @@ class Notification(models.Model):
         blank=True,
         help_text="Related message (if applicable)"
     )
+    parent_message = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='replies',
+        help_text="The parent message this is replying to"
+    )
     notification_type = models.CharField(
         max_length=20,
         choices=NOTIFICATION_TYPES,
@@ -120,6 +128,19 @@ class Notification(models.Model):
         self.is_read = True
         self.save(update_fields=['is_read'])
 
+    def is_root_message(self):
+        """root message
+        """
+        return self.parent_message is None
+
+    def get_thread(self):
+        """
+        Recursively get all replies to this message.
+        """
+        replies = list(self.replies.all())
+        for reply in replies:
+            replies.extend(reply.get_thread())
+        return replies
 
     @classmethod
     def create_message_notification(cls, message):
