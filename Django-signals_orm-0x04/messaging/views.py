@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model, logout
 from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import cache_page
 from .models import Message
 
 User = get_user_model()
@@ -65,4 +66,21 @@ def unread_messages(request):
 
     return render(request, 'messaging/unread_inbox.html', {
         'unread_messages': unread_msgs
+    })
+
+
+@cache_page(60)  # Cache for 60 seconds
+@login_required
+def conversation_detail(request, username):
+    other_user = get_object_or_404(User, username=username)
+
+    # Fetch messages between the logged-in user and the other user
+    messages = Message.objects.filter(
+        sender__in=[request.user, other_user],
+        receiver__in=[request.user, other_user]
+    ).select_related('sender', 'receiver').order_by('timestamp')
+
+    return render(request, 'messaging/conversation_detail.html', {
+        'messages': messages,
+        'other_user': other_user
     })

@@ -3,10 +3,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.cache import cache_page
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.models import User
 # from django.db.models import Q
 from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer
@@ -236,20 +232,3 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
-
-
-@cache_page(60)  # Cache for 60 seconds
-@login_required
-def conversation_detail(request, username):
-    other_user = get_object_or_404(User, username=username)
-
-    # Fetch messages between the logged-in user and the other user
-    messages = Message.objects.filter(
-        sender__in=[request.user, other_user],
-        receiver__in=[request.user, other_user]
-    ).select_related('sender', 'receiver').order_by('timestamp')
-
-    return render(request, 'messaging/conversation_detail.html', {
-        'messages': messages,
-        'other_user': other_user
-    })
