@@ -60,7 +60,9 @@ def inbox(request):
 
 @login_required
 def unread_messages(request):
-    unread_msgs = Message.unread.for_user(request.user)
+    # This uses the custom manager and retrieves only needed fields
+    unread_msgs = Message.unread.for_user(request.user).only('id', 'sender', 'content', 'timestamp')
+
     return render(request, 'messaging/unread_inbox.html', {
         'unread_messages': unread_msgs
     })
