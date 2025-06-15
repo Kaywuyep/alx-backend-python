@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.conf import settings
-
+from .managers import UnreadMessagesManager
 
 class Message(models.Model):
     """
@@ -14,6 +14,14 @@ class Message(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_messages',
         help_text="User who sent the message"
+    )
+    parent_message = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='replies',
+        help_text="The parent message this is replying to"
     )
     receiver = models.ForeignKey(
         # User,
@@ -33,6 +41,22 @@ class Message(models.Model):
         default=False,
         help_text="Whether the message has been read by the receiver"
     )
+    edited = models.BooleanField(
+        default=False,
+        help_text="Message edited")
+    edited_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last edited")
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='edited_messages'
+    )
+    objects = models.Manager()  # default manager
+    unread = UnreadMessagesManager()  # custom manager (defined below)
 
     class Meta:
         ordering = ['-timestamp']
@@ -47,6 +71,20 @@ class Message(models.Model):
         """Mark this message as read."""
         self.is_read = True
         self.save(update_fields=['is_read'])
+
+    def is_root_message(self):
+        """root message
+        """
+        return self.parent_message is None
+
+    def get_thread(self):
+        """
+        Recursively get all replies to this message.
+        """
+        replies = list(self.replies.all())
+        for reply in replies:
+            replies.extend(reply.get_thread())
+        return replies
 
 
 class Notification(models.Model):
@@ -74,14 +112,6 @@ class Notification(models.Model):
         blank=True,
         help_text="Related message (if applicable)"
     )
-    parent_message = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name='replies',
-        help_text="The parent message this is replying to"
-    )
     notification_type = models.CharField(
         max_length=20,
         choices=NOTIFICATION_TYPES,
@@ -91,20 +121,6 @@ class Notification(models.Model):
     title = models.CharField(
         max_length=200,
         help_text="Notification title"
-    )
-    edited = models.BooleanField(
-        default=False,
-        help_text="Message edited")
-    edited_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Last edited")
-    edited_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='edited_messages'
     )
     is_read = models.BooleanField(
         default=False,
@@ -127,20 +143,6 @@ class Notification(models.Model):
         """Mark this notification as read."""
         self.is_read = True
         self.save(update_fields=['is_read'])
-
-    def is_root_message(self):
-        """root message
-        """
-        return self.parent_message is None
-
-    def get_thread(self):
-        """
-        Recursively get all replies to this message.
-        """
-        replies = list(self.replies.all())
-        for reply in replies:
-            replies.extend(reply.get_thread())
-        return replies
 
     @classmethod
     def create_message_notification(cls, message):
