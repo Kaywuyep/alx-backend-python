@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.conf import settings
 
 
 class Message(models.Model):
@@ -8,13 +9,15 @@ class Message(models.Model):
     Model representing a message between users.
     """
     sender = models.ForeignKey(
-        User,
+        # User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='sent_messages',
         help_text="User who sent the message"
     )
     receiver = models.ForeignKey(
-        User,
+        # User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE, 
         related_name='received_messages',
         help_text="User who will receive the message"
@@ -57,8 +60,9 @@ class Notification(models.Model):
     )
 
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE, 
+        # User,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name='notifications',
         help_text="User who will receive the notification"
     )

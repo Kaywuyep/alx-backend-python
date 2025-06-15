@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-import messaging.signals
 
 
 class MessagingConfig(AppConfig):
@@ -17,6 +16,7 @@ class MessagingConfig(AppConfig):
         """
         try:
             # Import signals to ensure they are connected
+            import messaging.signals
             # You can also perform other initialization tasks here
             print("Messaging app signals loaded successfully")
 
