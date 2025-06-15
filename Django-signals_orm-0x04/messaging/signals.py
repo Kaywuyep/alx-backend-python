@@ -1,5 +1,6 @@
 import time
 from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -165,3 +166,22 @@ def track_message_edit(sender, instance, **kwargs):
         # Mark as edited
         instance.edited = True
         instance.edited_at = time.time()
+
+
+@receiver(post_delete, sender=User)
+def delete_user_related_data(sender, instance, **kwargs):
+    """
+    Clean up all messages, notifications, and histories related to the deleted user.
+    """
+    # Delete messages sent or received
+    Message.objects.filter(sender=instance).delete()
+    Message.objects.filter(receiver=instance).delete()
+
+    # Delete notifications
+    Notification.objects.filter(user=instance).delete()
+
+    # Delete message history related to any messages the user sent or received
+    MessageHistory.objects.filter(message__sender=instance).delete()
+    MessageHistory.objects.filter(message__receiver=instance).delete()
+
+    print(f"Cleaned up data for deleted user: {instance.username}")
