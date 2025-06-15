@@ -1,10 +1,12 @@
-from django.db.models.signals import post_save, post_delete
+import time
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .models import Message, Notification
 # Custom signal for bulk message operations
 from django.dispatch import Signal
+from .models import MessageHistory
 
 # Define custom signal
 bulk_messages_created = Signal()
@@ -138,3 +140,28 @@ def log_notification_read_status(sender, instance, created, **kwargs):
         print(
             f"Notification {instance.id} marked as read by user {instance.user.username}"
         )
+
+
+@receiver(pre_save, sender=Message)
+def track_message_edit(sender, instance, **kwargs):
+    """
+    Before saving a Message, check if the content has changed.
+    If yes, save the old content in MessageHistory.
+    """
+    if not instance.pk:
+        return  # New message, skip
+
+    try:
+        old_message = Message.objects.get(pk=instance.pk)
+    except Message.DoesNotExist:
+        return  # Shouldn't happen, but guard anyway
+
+    if old_message.content != instance.content:
+        # Save to MessageHistory
+        MessageHistory.objects.create(
+            message=instance,
+            old_content=old_message.content
+        )
+        # Mark as edited
+        instance.edited = True
+        instance.edited_at = time.time()

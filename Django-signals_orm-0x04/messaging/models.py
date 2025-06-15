@@ -84,12 +84,16 @@ class Notification(models.Model):
         max_length=200,
         help_text="Notification title"
     )
-    content = models.TextField(
-        help_text="Notification content"
-    )
+    edited = models.BooleanField(
+        default=False,
+        help_text="Message edited")
+    edited_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last edited")
     is_read = models.BooleanField(
         default=False,
-        help_text="Whether the notification has been read"
+        help_text="Message Read"
     )
     created_at = models.DateTimeField(
         default=timezone.now,
@@ -108,6 +112,7 @@ class Notification(models.Model):
         """Mark this notification as read."""
         self.is_read = True
         self.save(update_fields=['is_read'])
+
 
     @classmethod
     def create_message_notification(cls, message):
