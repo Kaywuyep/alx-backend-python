@@ -91,6 +91,13 @@ class Notification(models.Model):
         null=True,
         blank=True,
         help_text="Last edited")
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='edited_messages'
+    )
     is_read = models.BooleanField(
         default=False,
         help_text="Message Read"
