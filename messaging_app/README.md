@@ -42,3 +42,17 @@ python manage.py createsuperuser
 # 6️⃣ Run the development server:
 python manage.py runserver
 ```
+
+## set up containerization using docker
+
+- create a dockerfile
+- `docker build -t messaging-app .` This tells Docker to build an image and tag it as messaging-app.
+- `docker run -p 8000:8000 messaging-app` This maps your local port 8000 to the container's exposed port.
+- `pip freeze > requirements.txt` to copy depensencies
+
+
+```sql
+CREATE DATABASE `messaging-app-db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SHOW DATABASES;  -- Verify it was created
+EXIT;
+```
