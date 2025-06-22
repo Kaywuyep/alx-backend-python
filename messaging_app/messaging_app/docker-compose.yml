@@ -4,11 +4,11 @@ services:
     restart: always
     env_file: .env
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PORT: ${DB_PORT}
-      # MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     # ports:
       # - "3306:3306"
     volumes:
@@ -19,7 +19,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    # command: python3 manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "sleep 15 &&
+             python manage.py migrate &&
+             python3 manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:

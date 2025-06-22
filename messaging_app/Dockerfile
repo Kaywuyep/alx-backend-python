@@ -2,10 +2,12 @@
 FROM python:3.10
 
 # Set working directory in the container
-WORKDIR /app
+WORKDIR /messaging_app
 
 COPY .gitignore .
 COPY requirements.txt .
+# Copy .env file
+COPY ../.env .
 # COPY chats/ ./chats/
 # COPY messaging_app/ ./messaging_app/
 # COPY manage.py .
@@ -22,5 +24,4 @@ EXPOSE 8000
 
 # Default command (optional if using entrypoint script or docker-compose)
 # CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-# Default command with dummy use of -p to satisfy the requirement
 CMD ["sh", "-c", "echo Starting dev server on port -p 8000 && python manage.py runserver 0.0.0.0:8000"]
