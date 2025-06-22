@@ -4,7 +4,7 @@ services:
     restart: always
     env_file: .env
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_DB: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_PORT: ${DB_PORT}
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver
     volumes:
       - .:/app
     ports:
