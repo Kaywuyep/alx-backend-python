@@ -56,3 +56,9 @@ CREATE DATABASE `messaging-app-db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 SHOW DATABASES;  -- Verify it was created
 EXIT;
 ```
+
+install minikube to set uo kubernetes on windows
+```bash
+choco install minikube
+minikube version
+```
