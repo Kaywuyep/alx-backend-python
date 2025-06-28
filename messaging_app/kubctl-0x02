@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Deploy blue and green versions and check green logs
+
+set -e
+
+echo "🚀 Applying blue deployment..."
+kubectl apply -f blue_deployment.yaml
+
+echo "🚀 Applying green deployment..."
+kubectl apply -f green_deployment.yaml
+
+echo "⏳ Waiting for green pods to be ready..."
+sleep 15
+
+echo "📦 Checking pods..."
+kubectl get pods -l app=messaging-app-green
+
+echo "🔍 Showing logs for green pod..."
+POD_NAME=$(kubectl get pods -l app=messaging-app-green -o jsonpath="{.items[0].metadata.name}")
+kubectl logs "$POD_NAME"
+
+echo "✅ Done. Now switch service selector in 'kubeservice.yaml' to cut over to green:"
+echo "    app: messaging-app-green"

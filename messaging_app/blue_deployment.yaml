@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app-blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-app-blue
+  template:
+    metadata:
+      labels:
+        app: messaging-app-blue
+    spec:
+      containers:
+        - name: messaging-app
+          image: Kaywuyep/messaging_app-messaging-app:blue
+          ports:
+            - containerPort: 8000

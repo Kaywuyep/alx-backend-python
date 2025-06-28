@@ -89,3 +89,11 @@ docker tag messaging_app-messaging-app:latest kaywuyep/messaging-app:latest
 minikube status
 minikube start
 ```
+
+```bash
+# Deployment Steps Summary:
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f green_deployment.yaml
+kubectl apply -f kubeservice.yaml      # point it to blue or green
+./kubctl-0x02.sh
+```
