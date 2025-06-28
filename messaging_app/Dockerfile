@@ -4,10 +4,9 @@ FROM python:3.10
 # Set working directory in the container
 WORKDIR /messaging_app
 
-COPY .gitignore .
+# COPY .gitignore .
 COPY requirements.txt .
-# Copy .env file
-COPY ../.env .
+
 # COPY chats/ ./chats/
 # COPY messaging_app/ ./messaging_app/
 # COPY manage.py .

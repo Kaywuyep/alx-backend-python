@@ -57,8 +57,35 @@ SHOW DATABASES;  -- Verify it was created
 EXIT;
 ```
 
-install minikube to set uo kubernetes on windows
+- Install minikube to set uo kubernetes on windows
 ```bash
 choco install minikube
 minikube version
+```
+- Deploy the Django Messaging App on Kubernetes
+```bash
+# apply services
+kubectl apply -f deployment.yaml
+kubectl apply -f mysql-secret.yaml
+# Check Status and Logs
+kubectl get pods
+kubectl get services
+kubectl logs <your-django-pod-name>
+# start pods
+kubectl port-forward service/django-messaging-service 8000:8000
+# delete service
+kubectl delete deployment messaging-app
+kubectl delete pods <pod-name>
+kubectl delete service <service-name>
+#
+```
+
+```bash
+docker tag messaging_app-messaging-app:latest kaywuyep/messaging-app:latest
+
+```
+
+```bash
+minikube status
+minikube start
 ```
