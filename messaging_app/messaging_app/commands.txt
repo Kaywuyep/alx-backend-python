@@ -1,0 +1,7 @@
+minikube addons enable ingress
+kubectl apply -f ingress.yaml
+127.0.0.1  django.local
+minikube ip
+; Suppose it returns 192.168.49.2
+192.168.49.2  django.local
+curl http://django.local/api/
