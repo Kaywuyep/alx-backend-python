@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# kubctl-0x03.sh
+# Perform a rolling update to version 2.0 and test for downtime
+
+set -e
+
+DEPLOYMENT="messaging-app-blue"
+SERVICE="messaging-app-service"
+
+echo "🚀 Applying updated blue deployment (version 2.0)..."
+kubectl apply -f blue_deployment.yaml
+
+echo "📡 Monitoring rollout status..."
+kubectl rollout status deployment/$DEPLOYMENT
+
+echo "🌐 Getting Service URL..."
+SERVICE_URL=$(minikube service "$SERVICE" --url | head -n 1)
+
+echo "🔁 Sending continuous curl requests to test availability (Ctrl+C to stop)..."
+for i in {1..20}; do
+  echo -n "[$i] "
+  curl --silent --max-time 2 "$SERVICE_URL" || echo "❌ Request failed"
+  sleep 1
+done
+
+echo "📋 Current pods:"
+kubectl get pods -l app=messaging-app-blue
