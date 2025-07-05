@@ -97,3 +97,14 @@ kubectl apply -f green_deployment.yaml
 kubectl apply -f kubeservice.yaml      # point it to blue or green
 ./kubctl-0x02.sh
 ```
+
+setting up jenkins
+```bash
+# ensure docker container is runing
+docker run -d --name jenkins -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
+# for first time login get password from
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+# to to jenkins dashborad
+http://localhost:8080
+
+```

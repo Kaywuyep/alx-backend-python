@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    environment {
+        VENV_DIR = '.venv'
+        DOCKER_IMAGE = 'messaging_app-messaging-app'
+        DOCKER_TAG = 'latest'
+        DOCKER_REGISTRY = 'kaywuyep'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-creds', url: 'https://github.com/Kaywuyep/alx-backend-python.git', branch: 'main'
+            }
+        }
+
+        stage('Set up Python') {
+            steps {
+                sh 'python3 -m venv .venv'
+                sh '. .venv/bin/activate && pip install --upgrade pip'
+                sh '. .venv/bin/activate && pip install -r requirements.txt'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '. .venv/bin/activate && pytest --junitxml=report.xml'
+            }
+        }
+
+        stage('Archive Results') {
+            steps {
+                junit 'report.xml'
+            }
+        }
+
+        stage('Build Message App Docker Image') {
+            steps {
+                sh '''
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh '''
+                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up Docker images to save space
+            sh '''
+                docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true
+                docker rmi ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} || true
+            '''
+            cleanWs()
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+    }
+}
