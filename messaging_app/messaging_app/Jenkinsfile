@@ -20,8 +20,8 @@ pipeline {
         stage('Set up Python') {
             steps {
                 sh 'python3 -m venv .venv'
-                sh '. .venv/bin/activate && pip install --upgrade pip'
-                sh '. .venv/bin/activate && pip install -r messaging_app/requirements.txt'
+                sh '. .venv/bin/activate && pip3 install --upgrade pip'
+                sh '. .venv/bin/activate && pip3 install -r messaging_app/requirements.txt'
             }
         }
 
