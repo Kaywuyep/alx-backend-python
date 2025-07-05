@@ -1,0 +1,65 @@
+# Ensure the workflow installs necessary dependencies and sets up a MySQL database for running tests
+
+# Add a step to generate code coverage reports and upload them as build artifacts
+# Name of the workflow that will appear in GitHub Actions UI
+# included flake8
+
+name: Django CI Tests
+# Define when the workflow should run: on push and pull request to 'main' branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: messaging_app_test
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost" 
+          --health-interval=30s
+          --health-timeout=5s 
+          --health-retries=3
+    steps:
+      - name: setup python environment
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: install dependencies using pipenv
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pipenv flake8
+          pipenv install -r requirements.txt
+
+      - name: run django migrations
+        run: |
+          pipenv run python manage.py makemigrations
+          pipenv run python manage.py migrate
+
+      - name: run flake8
+        run: |
+          pipenv run flake8 .
+
+      - name: run tests with coverage
+        run: |
+          pipenv run coverage run --source='.' manage.py test --settings=messaging_app.settings.test
+          pipenv run coverage xml -o coverage.xml
+
+      - name: upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: coverage.xml
